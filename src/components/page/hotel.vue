@@ -132,8 +132,15 @@
                     self.total = res.data.data.total
                 })
             },
+            editorPage(){
+              this.$router.push({
+                path: '/editor'
+              })
+            },
             handleEdit(){
-
+              this.$router.push({
+                path: '/editor'
+              })
             },
             handleDelete(){
               this.$confirm('确定删除当前客房?', '提示', {

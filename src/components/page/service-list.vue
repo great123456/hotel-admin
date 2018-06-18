@@ -11,7 +11,8 @@
               <el-button type="primary" plain @click="addSchool">添加服务</el-button>
             </div>
             <el-table :data="tableData" border style="width: 100%" ref="multipleTable">
-                <el-table-column prop="created_at" label="服务名称" sortable></el-table-column>
+                <el-table-column prop="created_at" label="创建日期" sortable></el-table-column>
+                <el-table-column prop="created_ata" label="服务名称"></el-table-column>
                 <el-table-column prop="created_ata" label="服务图片" sortable></el-table-column>
                 <el-table-column label="操作">
                    <template slot-scope="scope">

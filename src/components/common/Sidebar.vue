@@ -1,7 +1,7 @@
 <template>
     <div class="sidebar">
         <el-menu class="sidebar-el-menu" :default-active="onRoutes" :collapse="collapse" background-color="#324157"
-            text-color="#bfcbd9" active-text-color="#20a0ff" unique-opened router>
+            text-color="#bfcbd9"  unique-opened router>
             <template v-for="item in items">
                 <template v-if="item.subs">
                     <el-submenu :index="item.index" :key="item.index">
@@ -36,9 +36,19 @@
                         title: '订单管理'
                     },
                     {
+                        icon: 'el-icon-goods',
+                        index: 'catelist',
+                        title: '美食菜谱'
+                    },
+                    {
                         icon: 'el-icon-menu',
                         index: 'catemangage',
                         title: '菜品管理'
+                    },
+                    {
+                        icon: 'el-icon-bell',
+                        index: 'servicelist',
+                        title: '客房服务'
                     },
                     {
                         icon: 'el-icon-menu',
@@ -49,16 +59,6 @@
                         icon: 'el-icon-setting',
                         index: 'hotel',
                         title: '酒店主页'
-                    },
-                    {
-                        icon: 'el-icon-goods',
-                        index: 'catelist',
-                        title: '美食菜谱'
-                    },
-                    {
-                        icon: 'el-icon-bell',
-                        index: 'servicelist',
-                        title: '客房服务'
                     },
                     {
                         icon: 'el-icon-upload',

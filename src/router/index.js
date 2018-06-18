@@ -31,6 +31,11 @@ export default new Router({
                     meta: { title: '酒店主页' }
                 },
                 {
+                    path: '/editor',
+                    component: resolve => require(['../components/page/editor.vue'], resolve),
+                    meta: { title: '酒店详情' }
+                },
+                {
                     // banner
                     path: '/catebanner',
                     component: resolve => require(['../components/page/cate-banner.vue'], resolve),

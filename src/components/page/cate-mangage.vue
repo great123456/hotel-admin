@@ -19,12 +19,13 @@
               <el-button type="primary" plain @click="addSchool">添加菜品</el-button>
             </div>
             <el-table :data="tableData" border style="width: 100%" ref="multipleTable">
-                <el-table-column prop="created_at" label="菜品名称" sortable></el-table-column>
-                <el-table-column prop="created_at" label="菜品价格"></el-table-column>
-                <el-table-column prop="created_at" label="使用时间"></el-table-column>
-                <el-table-column prop="created_at" label="有效期"></el-table-column>
-                <el-table-column prop="created_at" label="菜品简介"></el-table-column>
-                <el-table-column prop="created_ata" label="菜品图片"></el-table-column>
+               <el-table-column prop="created_at" label="创建日期" sortable></el-table-column>
+                <el-table-column prop="created_ata" label="菜品名称"></el-table-column>
+                <el-table-column prop="created_ata" label="菜品价格"></el-table-column>
+                <el-table-column prop="created_ata" label="使用时间"></el-table-column>
+                <el-table-column prop="created_ata" label="有效期"></el-table-column>
+                <el-table-column prop="created_ata" label="菜品简介"></el-table-column>
+                <el-table-column prop="created_ataa" label="菜品图片"></el-table-column>
                 <el-table-column label="操作">
                    <template slot-scope="scope">
                       <el-button
