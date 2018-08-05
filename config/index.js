@@ -11,11 +11,11 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      '/api':{
-          target:'http://healthapi.hxgtech.com/api',
+      '/api/admin':{
+          target:'http://hotelapi.hxgtech.com/api/admin',
           changeOrigin:true,
           pathRewrite:{
-              '/api':''
+              '/api/admin':''
           }
       },
       '/ms':{
@@ -25,7 +25,7 @@ module.exports = {
     },
     // Various Dev Server settings
     host: '0.0.0.0', // can be overwritten by process.env.HOST
-    port: 3000,         // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
+    port: 3001,         // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: false,
     errorOverlay: true,
     notifyOnErrors: true,
