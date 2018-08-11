@@ -12,7 +12,7 @@
                   <el-option
                     v-for="item in cateList"
                     :key="item.id"
-                    :label="item.label"
+                    :label="item.name"
                     :value="item.id">
                   </el-option>
               </el-select>
@@ -20,9 +20,13 @@
             </div>
             <el-table :data="tableData" border style="width: 100%" ref="multipleTable">
                 <el-table-column prop="created_at" label="创建日期" sortable></el-table-column>
-                <el-table-column prop="created_ata" label="产品名称"></el-table-column>
-                <el-table-column prop="created_ata" label="产品价格"></el-table-column>
-                <el-table-column prop="created_ata" label="产品图片"></el-table-column>
+                <el-table-column prop="name" label="产品名称"></el-table-column>
+                <el-table-column prop="price" label="产品价格"></el-table-column>
+                <el-table-column label="产品图片">
+                  <template slot-scope="props">
+                    <img :src="props.row.img" alt="" style="width:100px;height:auto;cursor:pointer;" @click="checkImage(props.row.img)">
+                  </template>
+                </el-table-column>
                 <el-table-column label="操作">
                    <template slot-scope="scope">
                       <el-button
@@ -49,18 +53,21 @@
                     <el-input v-model="form.name"></el-input>
                 </el-form-item>
                 <el-form-item label="价格">
-                    <el-input v-model="form.name"></el-input>
+                    <el-input v-model="form.price"></el-input>
                 </el-form-item>
             </el-form>
             <el-upload
-              action="https://jsonplaceholder.typicode.com/posts/"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
-              :before-remove="beforeRemove"
+              class="upload-demo"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
               :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="fileList">
-              <el-button size="small" type="primary">上传图片</el-button>
+              :headers="token"
+              :file-list="fileList"
+              list-type="picture">
+              <el-button size="small" type="primary">上传服务产品图片</el-button>
               <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
             </el-upload>
             <span slot="footer" class="dialog-footer">
@@ -73,12 +80,11 @@
 </template>
 
 <script>
+  import { apiServiceList,apiServiceProList,apiServiceProListAdd,apiServiceProListDelete } from '@/service/index'
     export default {
         data() {
             return {
-                cateList: [{
-                  label: '床上用品'
-                }],
+                cateList: [],
                 cateId: '',
                 fileList: [],
                 tableData: [],
@@ -91,18 +97,20 @@
                 editVisible: false,
                 form: {
                     name: '',
-                    date: '',
-                    time1: '',
-                    time2:'',
-                    desc: ''
-                }
+                    price: ''
+                },
+                deleteId: ''
             }
         },
         created() {
-            this.getData();
+            this.getServiceList()
         },
         computed: {
-
+           token(){
+             return {
+               Authorization: `bearer ${localStorage.getItem('admin-token')}`
+             }
+           }
         },
         methods: {
             // 分页导航
@@ -110,56 +118,78 @@
                 this.cur_page = val;
                 this.getData();
             },
-            handleRemove(file, fileList) {
-                console.log(file, fileList);
+            handleRemoveMain(file, fileList) {
+                this.fileList = fileList
             },
-            handlePreview(file) {
-                console.log(file);
+            handleChangeMain(file, fileList){
+              this.fileList = fileList
             },
-            handleExceed(files, fileList) {
-              this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+            checkImage(url){
+              window.open(url)
             },
-            beforeRemove(file, fileList) {
-              return this.$confirm(`确定移除 ${ file.name }？`);
+            getServiceList(){
+               apiServiceList()
+                .then((res) => {
+                    this.cateList = res.data.list
+                    if(this.cateList.length>0){
+                      this.cateId = this.cateList[0].id
+                      this.getData()
+                    }
+                })
             },
             getData() {
                 const self = this
-                this.$axios({
-                  method: 'get',
-                  url: `/api/admin/order/apm/${self.pageSize}?page=${self.cur_page}`,
-                  headers: {
-                    Authorization: `bearer ${localStorage.getItem('admin-token')}`
-                  }
+                apiServiceProList({
+                  id: this.cateId
                 })
                 .then((res) => {
-                    console.log('res',res.data)
-                    self.tableData = res.data.data.list
-                    self.total = res.data.data.total
+                    self.tableData = res.data.list
+                    self.total = res.data.total
                 })
             },
             search() {
                 this.is_search = true;
             },
             addSchool(){
+              if(this.cateId == ''){
+                this.$message('请先选择一个服务')
+                return
+              }
               this.editVisible = true
+              this.form.name = ''
+              this.form.price = ''
+              this.fileList = []
             },
-            // 保存编辑
+            // 添加服务产品
             saveEdit() {
-
+              apiServiceProListAdd({
+                name: this.form.name,
+                img: this.fileList[0].response.data.url,
+                price: this.form.price,
+                sort: 1,
+                service_id: this.cateId
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.editVisible = false
+                  this.$message.success('添加成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             },
             handleEdit(){
 
             },
-            handleDelete(){
+            handleDelete(row){
+              this.deleteId = row.id
               this.$confirm('确定删除当前菜谱?', '提示', {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
                         type: 'warning'
                       }).then(() => {
-                        this.$message({
-                          type: 'success',
-                          message: '删除成功!'
-                        });
+                        this.deleteRow()
                       }).catch(() => {
                         this.$message({
                           type: 'info',
@@ -169,7 +199,17 @@
             },
             // 确定删除
             deleteRow(){
-
+              apiServiceProListDelete({
+                id: this.deleteId
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.$message.success('删除成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             }
         }
     }

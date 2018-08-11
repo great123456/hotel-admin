@@ -45,10 +45,21 @@
                 const self = this
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
-                        apiUserInfo()
-                        .then((res)=>{
-                            console.log('login',res)
-                        })
+                      apiUserLogin({
+                        email: self.ruleForm.username,
+                        password: self.ruleForm.password
+                      })
+                      .then((res)=>{
+                        console.log('res',res)
+                        if(res.code == 200){
+                          self.$message.success('登录成功')
+                          localStorage.setItem('admin-token',res.data.token)
+                          localStorage.setItem('username',self.ruleForm.username);
+                          self.$router.push('/order');
+                        }else{
+                          self.$message.error('用户名或者密码错误')
+                        }
+                      })
                     } else {
                         return false;
                     }

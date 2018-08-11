@@ -28,7 +28,7 @@ export default new Router({
                 {
                     path: '/hotel',
                     component: resolve => require(['../pages/hotel.vue'], resolve),
-                    meta: { title: '酒店主页' }
+                    meta: { title: '首页图文' }
                 },
                 {
                     path: '/editor',
@@ -64,6 +64,18 @@ export default new Router({
                     path: '/servicemangage',
                     component: resolve => require(['../pages/service-mangage.vue'], resolve),
                     meta: { title: '服务管理' }
+                },
+                {
+                    //优惠券
+                    path: '/coupon',
+                    component: resolve => require(['../pages/coupon.vue'], resolve),
+                    meta: { title: '优惠券' }
+                },
+                {
+                    //游记
+                    path: '/travel',
+                    component: resolve => require(['../pages/travel.vue'], resolve),
+                    meta: { title: '游记管理' }
                 }
             ]
         },

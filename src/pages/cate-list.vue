@@ -11,9 +11,12 @@
               <el-button type="primary" plain @click="addSchool">添加菜谱</el-button>
             </div>
             <el-table :data="tableData" border style="width: 100%" ref="multipleTable">
-               <el-table-column prop="created_at" label="创建日期" sortable></el-table-column>
-                <el-table-column prop="created_ata" label="菜谱名称"></el-table-column>
-                <el-table-column prop="created_ata" label="菜谱图片" sortable></el-table-column>
+                <el-table-column prop="name" label="菜谱名称"></el-table-column>
+                <el-table-column label="菜谱图标">
+                  <template slot-scope="props">
+                    <img :src="props.row.img" alt="" style="width:100px;height:auto;cursor:pointer;" @click="checkImage(props.row.img)">
+                  </template>
+                </el-table-column>
                 <el-table-column label="操作">
                    <template slot-scope="scope">
                       <el-button
@@ -33,7 +36,7 @@
             </div>
         </div>
 
-        <!-- 编辑弹出框 -->
+        <!-- 添加菜谱 -->
         <el-dialog title="添加菜谱" :visible.sync="editVisible" width="500px">
             <el-form ref="form" :model="form" label-width="80px">
                 <el-form-item label="菜谱名称">
@@ -41,14 +44,17 @@
                 </el-form-item>
             </el-form>
             <el-upload
-              action="https://jsonplaceholder.typicode.com/posts/"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
-              :before-remove="beforeRemove"
+              class="upload-demo"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
               :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="fileList">
-              <el-button size="small" type="primary">上传图片</el-button>
+              :headers="token"
+              :file-list="fileList"
+              list-type="picture">
+              <el-button size="small" type="primary">上传菜谱图标</el-button>
               <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
             </el-upload>
             <span slot="footer" class="dialog-footer">
@@ -57,10 +63,38 @@
             </span>
         </el-dialog>
 
+        <!-- 修改菜谱 -->
+        <el-dialog title="修改菜谱" :visible.sync="dialogUpdate" width="500px">
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="菜谱名称">
+                    <el-input v-model="form.name"></el-input>
+                </el-form-item>
+            </el-form>
+            <el-upload
+              class="upload-demo"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
+              :limit="1"
+              :headers="token"
+              :file-list="fileList"
+              list-type="picture">
+              <el-button size="small" type="primary">上传菜谱图标</el-button>
+              <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
+            </el-upload>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogUpdate = false">取 消</el-button>
+                <el-button type="primary" @click="updateCookBook">修改</el-button>
+            </span>
+        </el-dialog>
+
     </div>
 </template>
 
 <script>
+    import { apiAddCookbook,apiCookbookList,apiCookbookDelete,apiCookbookSave } from '@/service'
     export default {
         data() {
             return {
@@ -73,17 +107,24 @@
                 select_word: '',
                 is_search: false,
                 editVisible: false,
+                dialogUpdate: false,
                 form: {
                     name: '',
                     address: ''
-                }
+                },
+                deleteId: '',
+                updateId: ''
             }
         },
         created() {
-            this.getData();
+           this.getData();
         },
         computed: {
-
+            token(){
+             return {
+               Authorization: `bearer ${localStorage.getItem('admin-token')}`
+             }
+           }
         },
         methods: {
             // 分页导航
@@ -91,56 +132,85 @@
                 this.cur_page = val;
                 this.getData();
             },
-            handleRemove(file, fileList) {
-                console.log(file, fileList);
+            handleRemoveMain(file, fileList) {
+                this.fileList = fileList
             },
-            handlePreview(file) {
-                console.log(file);
+            handleChangeMain(file, fileList){
+              this.fileList = fileList
             },
-            handleExceed(files, fileList) {
-              this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
-            },
-            beforeRemove(file, fileList) {
-              return this.$confirm(`确定移除 ${ file.name }？`);
+            checkImage(url){
+              window.open(url)
             },
             getData() {
-                const self = this
-                this.$axios({
-                  method: 'get',
-                  url: `/api/admin/order/apm/${self.pageSize}?page=${self.cur_page}`,
-                  headers: {
-                    Authorization: `bearer ${localStorage.getItem('admin-token')}`
-                  }
-                })
+                apiCookbookList()
                 .then((res) => {
-                    console.log('res',res.data)
-                    self.tableData = res.data.data.list
-                    self.total = res.data.data.total
+                    this.tableData = res.data.list
+                    this.total = res.data.total
                 })
-            },
-            search() {
-                this.is_search = true;
             },
             addSchool(){
               this.editVisible = true
+              this.form.name = ''
+              this.fileList = []
             },
-            // 保存编辑
+            // 添加菜谱
             saveEdit() {
-
+              if(this.form.name == ''){
+                this.$message.error('菜谱名称不能为空')
+                return
+              }
+              if(this.fileList.length == 0){
+                this.$message.error('菜谱图标未上传')
+                return
+              }
+              apiAddCookbook({
+                name: this.form.name,
+                img: this.fileList[0].response.data.url,
+                sort: 1
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.editVisible = false
+                  this.$message.success('添加成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             },
-            handleEdit(){
-
+            handleEdit(index,row){
+              this.dialogUpdate = true
+              this.form.name = row.name
+              this.updateId = row.id
+              this.fileList = []
             },
-            handleDelete(){
+            updateCookBook(){
+               if(this.form.name == ''){
+                 this.$message.error('菜谱名称不能为空')
+                 return
+               }
+               if(this.fileList.length == 0){
+                 this.$message.error('菜谱图标未上传')
+                 return
+               }
+               apiCookbookSave({
+                 id: this.updateId,
+                 name: this.form.name,
+                 img: this.fileList[0].response.data.url,
+                 sort: 1
+               })
+               .then((res)=>{
+                 console.log(res)
+               })
+            },
+            handleDelete(row){
+              this.deleteId = row.id
               this.$confirm('确定删除当前菜谱?', '提示', {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
                         type: 'warning'
                       }).then(() => {
-                        this.$message({
-                          type: 'success',
-                          message: '删除成功!'
-                        });
+                        this.deleteRow()
                       }).catch(() => {
                         this.$message({
                           type: 'info',
@@ -150,7 +220,17 @@
             },
             // 确定删除
             deleteRow(){
-
+              apiCookbookDelete({
+                id: this.deleteId
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.$message.success('删除成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             }
         }
     }

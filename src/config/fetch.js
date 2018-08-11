@@ -20,7 +20,7 @@ axios.interceptors.request.use((config) => {
 axios.interceptors.response.use(response => {
   if (response.data.code !== 'undefined') {
     switch(response.data.code){
-      case 10230:
+      case 401:
         router.replace({
             path: '/login'
         })
@@ -55,7 +55,7 @@ export default function fetch (url, params, method) {
     .then(response => {
       resolve(response.data)
     }, err => {
-      reject(err)
+      resolve(err)
     })
     .catch((error) => {
       reject(error)

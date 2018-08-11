@@ -1,4 +1,4 @@
-<!-- 美食banner -->
+<!-- banner -->
 <template>
     <div class="table">
         <div class="crumbs">
@@ -8,7 +8,7 @@
         </div>
         <div class="container">
             <div class="handle-box">
-              <el-select v-model="bannerId" placeholder="请选择">
+              <el-select v-model="bannerType" placeholder="请选择" @change="selectChange">
                   <el-option
                     v-for="item in bannerList"
                     :key="item.id"
@@ -16,13 +16,12 @@
                     :value="item.id">
                   </el-option>
               </el-select>
-              <el-button type="primary" plain @click="addSchool">添加banner</el-button>
+              <el-button type="primary" plain @click="addBanner">添加banner</el-button>
             </div>
             <el-table :data="tableData" border style="width: 100%" ref="multipleTable">
-                <el-table-column prop="created_at" label="创建日期"></el-table-column>
                 <el-table-column label="banner">
                   <template slot-scope="props">
-                    <img :src="props.row.atar" alt="" style="width:100px;height:auto;">
+                    <img :src="props.row.img" alt="" style="width:100px;height:auto;cursor:pointer;" @click="checkImage(props.row.img)">
                   </template>
                 </el-table-column>
                  <el-table-column label="操作">
@@ -40,9 +39,13 @@
         <el-dialog title="上传图片" :visible.sync="addVisible" width="500px">
             <el-upload
               class="upload-demo"
-              action="https://jsonplaceholder.typicode.com/posts/"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
+              :limit="1"
+              :headers="token"
               :file-list="fileList"
               list-type="picture">
               <el-button size="small" type="primary">点击上传</el-button>
@@ -50,7 +53,7 @@
             </el-upload>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
+                <el-button type="primary" @click="saveEdit">添加</el-button>
             </span>
         </el-dialog>
 
@@ -66,6 +69,7 @@
 </template>
 
 <script>
+    import { apiAddBanner,apiBannerList,apiBannerDelete } from '@/service'
     export default {
         data() {
             return {
@@ -75,8 +79,11 @@
                 },{
                   label: '服务banner',
                   id:2
+                },{
+                  label: '首页banner',
+                  id:3
                 }],
-                bannerId:1,
+                bannerType:1,
                 tableData: [],
                 fileList: [],
                 cur_page: 1,
@@ -84,16 +91,6 @@
                 schoolId:'',
                 addVisible: false,
                 delVisible: false,
-                form: {
-                    name: '',
-                    atar: '',
-                    position: '',
-                    hospital: '',
-                    department: '',
-                    good_at: '',
-                    introduction: '',
-                    content: ''
-                },
                 imageUrl: '',
                 deleteId: ''
             }
@@ -114,95 +111,42 @@
                 this.cur_page = val;
                 this.getData();
             },
-            handleRemove(file, fileList) {
-                console.log(file, fileList);
+            handleRemoveMain(file, fileList) {
+                this.fileList = fileList
             },
-            handlePreview(file) {
-                console.log(file);
-            },
-            fileChange(){                                           //选择文件
-              this.fileName = document.getElementById("file").files[0].name
-            },
-            uploadImage(){
-               const self = this
-               if(this.fileName == ''){
-                 self.$message.error('请先选择上传的图片文件')
-                 return
-               }
-               var files = document.getElementById("file").files[0]
-               var url = '/api/admin/upload/upload-image'
-               var xhr = new XMLHttpRequest()
-               var formData = new FormData()
-               formData.append('img',files)
-               xhr.open('POST', url, true)
-               xhr.onreadystatechange = function(response){
-                  if(xhr.readyState==4){
-                    if(xhr.status==200){
-                       let res = JSON.parse(xhr.responseText)
-                       console.log('res',res);
-                      if(res.code == 200){
-                       self.$message.success('上传头像成功')
-                       self.form.atar = res.data.url
-                       console.log('url',self.form.atar)
-                      }else{
-                       self.$message.error(res.msg)
-                      }
-                    }else{
-                     self.$message.error(`系统繁忙(code:${xhr.status})`)
-                    }
-                  }
-               }
-               xhr.setRequestHeader("Authorization", `bearer ${localStorage.getItem('admin-token')}`)
-               xhr.send(formData)
+            handleChangeMain(file, fileList){
+              this.fileList = fileList
             },
             selectChange(){
               this.getData()
             },
+            checkImage(url){
+              window.open(url)
+            },
             getData(){
               const self = this
-              this.$axios({
-                method: 'get',
-                url: `/api/admin/doctor/list/10?page=1`,
-                headers: {
-                  Authorization: `bearer ${localStorage.getItem('admin-token')}`
-                }
+              apiBannerList({
+                type: this.bannerType,
+                page: 1
               })
               .then((res) => {
-                  self.tableData = res.data.data.list
-                  self.tableData.forEach(function(item){
-                    item.atar = 'https://healthapi.hxgtech.com'+item.atar
-                  })
-                  console.log('res-zdi',self.tableData);
+                  self.tableData = res.data.list
               })
             },
-            addSchool(){
-              this.fileName = ''
+            addBanner(){
               this.addVisible = true
+              this.fileList = []
             },
-            // 保存编辑
+            // 添加banner
             saveEdit() {
               const self = this
-              this.$axios({
-                method: 'post',
-                url: `/api/admin/doctor/store`,
-                headers: {
-                  Authorization: `bearer ${localStorage.getItem('admin-token')}`
-                },
-                data: {
-                  name: self.form.name,
-                  atar: self.form.atar,
-                  position: self.form.position,
-                  hospital: self.form.hospital,
-                  department: self.form.department,
-                  good_at: self.form.good_at,
-                  introduction: self.form.introduction,
-                  content: self.form.content,
-                  sort: 1,
-                  is_recommend: 1
-                }
+              apiAddBanner({
+                img: this.fileList[0].response.data.url,
+                type: this.bannerType,
+                sort: 1
               })
               .then((res) => {
-                if(res.data.code == 200){
+                if(res.code == 200){
                   self.$message.success('添加成功')
                   self.addVisible = false
                   self.getData()
@@ -218,10 +162,7 @@
                          cancelButtonText: '取消',
                          type: 'warning'
                        }).then(() => {
-                         this.$message({
-                           type: 'success',
-                           message: '删除成功!'
-                         });
+                         this.deleteRow()
                        }).catch(() => {
                          this.$message({
                            type: 'info',
@@ -231,7 +172,17 @@
             },
             // 确定删除
             deleteRow(){
-
+              apiBannerDelete({
+                id: this.deleteId
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.$message.success('删除成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             }
         }
     }

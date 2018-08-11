@@ -1,4 +1,4 @@
-<!-- 美食订单 -->
+<!-- 订单管理 -->
 <template>
     <div class="table">
         <div class="crumbs">
@@ -8,7 +8,7 @@
         </div>
         <div class="container">
             <div class="handle-box">
-              <el-select v-model="typeId" placeholder="请选择订单类型">
+              <el-select v-model="typeId" placeholder="请选择订单类型" @change="selectType">
                   <el-option
                     v-for="item in typeList"
                     :key="item.id"
@@ -33,30 +33,11 @@
             </div>
         </div>
 
-        <!-- 编辑弹出框 -->
-        <el-dialog title="编辑" :visible.sync="editVisible" width="500px">
-            <el-form ref="form" :model="form" label-width="50px">
-                <el-form-item label="日期">
-                    <el-date-picker type="date" placeholder="选择日期" v-model="form.date" value-format="yyyy-MM-dd" style="width: 100%;"></el-date-picker>
-                </el-form-item>
-                <el-form-item label="姓名">
-                    <el-input v-model="form.name"></el-input>
-                </el-form-item>
-                <el-form-item label="地址">
-                    <el-input v-model="form.address"></el-input>
-                </el-form-item>
-
-            </el-form>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="editVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
-            </span>
-        </el-dialog>
-
     </div>
 </template>
 
 <script>
+    import { apiOrderList } from '@/service'
     export default {
         data() {
             return {
@@ -74,13 +55,7 @@
                 total: 0,
                 select_cate: '',
                 select_word: '',
-                is_search: false,
-                editVisible: false,
-                form: {
-                    name: '',
-                    date: '',
-                    address: ''
-                }
+                is_search: false
             }
         },
         created() {
@@ -96,19 +71,17 @@
                 this.getData();
             },
             getData() {
-                const self = this
-                this.$axios({
-                  method: 'get',
-                  url: `/api/admin/order/apm/${self.pageSize}?page=${self.cur_page}`,
-                  headers: {
-                    Authorization: `bearer ${localStorage.getItem('admin-token')}`
-                  }
+                apiOrderList({
+                    type: this.typeId
                 })
                 .then((res) => {
                     console.log('res',res.data)
-                    self.tableData = res.data.data.list
-                    self.total = res.data.data.total
+                    this.tableData = res.data.list
+                    this.total = res.data.total
                 })
+            },
+            selectType(){
+              this.getData();
             },
             search() {
                 this.is_search = true;

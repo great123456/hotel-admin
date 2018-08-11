@@ -8,18 +8,19 @@
         </div>
         <div class="container">
             <div class="handle-box">
-              <el-button type="primary" plain @click="addSchool">添加客房</el-button>
+              <el-button type="primary" plain @click="addSchool">添加图文</el-button>
             </div>
             <el-table :data="tableData" border style="width: 100%" ref="multipleTable">
-                <el-table-column prop="apm_det_address" label="客房名称"></el-table-column>
-                <el-table-column prop="apm_id_card_noa" label="客房主图"></el-table-column>
-                <el-table-column prop="apm_id_card_noa" label="客房详情"></el-table-column>
+                <el-table-column prop="created_at" label="创建时间"></el-table-column>
+                <el-table-column prop="name" label="图文标题"></el-table-column>
+                <el-table-column label="封面图">
+                  <template slot-scope="props">
+                    <img :src="props.row.img" alt="" style="width:100px;height:auto;cursor:pointer;" @click="checkImage(props.row.img)">
+                  </template>
+                </el-table-column>
+                <el-table-column prop="content" label="图文链接"></el-table-column>
                 <el-table-column label="操作">
                    <template slot-scope="scope">
-                      <el-button
-                         size="mini"
-                         type="primary"
-                         @click="handleEdit(scope.$index, scope.row)">编辑详情</el-button>
                       <el-button
                         size="mini"
                         type="danger"
@@ -27,27 +28,35 @@
                     </template>
                 </el-table-column>
             </el-table>
-            <div class="pagination">
+            <!-- <div class="pagination">
                 <el-pagination background @current-change="handleCurrentChange" :page-size="pageSize" layout="prev, pager, next" :total="total">
                 </el-pagination>
-            </div>
+            </div> -->
         </div>
 
         <!-- 编辑弹出框 -->
-        <el-dialog title="添加客房" :visible.sync="editVisible" width="500px">
+        <el-dialog title="添加图文" :visible.sync="editVisible" width="500px">
             <el-form ref="form" :model="form" label-width="80px">
-                <el-form-item label="客房名称">
+                <el-form-item label="图文标题">
                     <el-input v-model="form.name"></el-input>
                 </el-form-item>
             </el-form>
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="图文链接">
+                    <el-input v-model="form.link"></el-input>
+                </el-form-item>
+            </el-form>
             <el-upload
-              action="https://jsonplaceholder.typicode.com/posts/"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
-              :before-remove="beforeRemove"
+              class="upload-demo"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
               :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="fileList">
+              :headers="token"
+              :file-list="fileList"
+              list-type="picture">
               <el-button size="small" type="primary">上传主图</el-button>
             </el-upload>
             <span slot="footer" class="dialog-footer">
@@ -73,6 +82,7 @@
 </template>
 
 <script>
+    import { apiIndexListAdd,apiIndexList,apiIndexListDelete } from '@/service/index'
     export default {
         data() {
             return {
@@ -88,16 +98,22 @@
                 editRoomVisible: false,
                 form: {
                     name: '',
+                    link: '',
                     date: '',
                     address: ''
-                }
+                },
+                deleteId: ''
             }
         },
         created() {
             this.getData();
         },
         computed: {
-
+           token(){
+             return {
+               Authorization: `bearer ${localStorage.getItem('admin-token')}`
+             }
+           }
         },
         methods: {
             // 分页导航
@@ -105,53 +121,34 @@
                 this.cur_page = val;
                 this.getData();
             },
-            handleRemove(file, fileList) {
-                console.log(file, fileList);
+            handleRemoveMain(file, fileList) {
+                this.fileList = fileList
             },
-            handlePreview(file) {
-                console.log(file);
+            handleChangeMain(file, fileList){
+              this.fileList = fileList
             },
-            handleExceed(files, fileList) {
-              this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
-            },
-            beforeRemove(file, fileList) {
-              return this.$confirm(`确定移除 ${ file.name }？`);
+            checkImage(url){
+              window.open(url)
             },
             getData() {
                 const self = this
-                this.$axios({
-                  method: 'get',
-                  url: `/api/admin/order/apm/${self.pageSize}?page=${self.cur_page}`,
-                  headers: {
-                    Authorization: `bearer ${localStorage.getItem('admin-token')}`
-                  }
-                })
+                apiIndexList()
                 .then((res) => {
-                    console.log('res',res.data)
-                    self.tableData = res.data.data.list
-                    self.total = res.data.data.total
+                    self.tableData = res.data.list
+                    self.total = res.data.total
                 })
-            },
-            editorPage(){
-              this.$router.push({
-                path: '/editor'
-              })
             },
             handleEdit(){
-              this.$router.push({
-                path: '/editor'
-              })
+              
             },
-            handleDelete(){
-              this.$confirm('确定删除当前客房?', '提示', {
+            handleDelete(row){
+              this.deleteId = row.id
+              this.$confirm('确定删除当前图文?', '提示', {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
                         type: 'warning'
                       }).then(() => {
-                        this.$message({
-                          type: 'success',
-                          message: '删除成功!'
-                        });
+                        this.deleteRow()
                       }).catch(() => {
                         this.$message({
                           type: 'info',
@@ -161,17 +158,45 @@
             },
             addSchool(){
               this.editVisible = true
+              this.form.name = ''
+              this.form.link = ''
+              this.fileList = []
             },
             search() {
                 this.is_search = true;
             },
-            // 保存编辑
+            // 保存图文
             saveEdit() {
-
+              apiIndexListAdd({
+                name: this.form.name,
+                type: 1,
+                img: this.fileList[0].response.data.url,
+                sort: 1,
+                content: this.form.link
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.editVisible = false
+                  this.$message.success('添加成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             },
             // 确定删除
             deleteRow(){
-
+              apiIndexListDelete({
+                id: this.deleteId
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.$message.success('删除成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             }
         }
     }

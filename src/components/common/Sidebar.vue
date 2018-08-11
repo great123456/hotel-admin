@@ -58,12 +58,22 @@
                     {
                         icon: 'el-icon-setting',
                         index: 'hotel',
-                        title: '酒店主页'
+                        title: '首页图文'
+                    },
+                    {
+                        icon: 'el-icon-setting',
+                        index: 'travel',
+                        title: '游记列表'
                     },
                     {
                         icon: 'el-icon-upload',
                         index: 'catebanner',
                         title: 'banner管理'
+                    },
+                    {
+                        icon: 'el-icon-menu',
+                        index: 'coupon',
+                        title: '优惠券管理'
                     }
                 ]
             }

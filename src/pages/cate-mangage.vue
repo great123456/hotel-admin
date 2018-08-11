@@ -1,4 +1,4 @@
-<!-- 美食管理 -->
+<!-- 菜品管理 -->
 <template>
     <div class="table">
         <div class="crumbs">
@@ -8,24 +8,27 @@
         </div>
         <div class="container">
             <div class="handle-box">
-              <el-select v-model="cateId" placeholder="请选择菜谱">
+              <el-select v-model="cateId" placeholder="请选择菜谱" @change="selectCook">
                   <el-option
                     v-for="item in cateList"
                     :key="item.id"
-                    :label="item.label"
+                    :label="item.name"
                     :value="item.id">
                   </el-option>
               </el-select>
               <el-button type="primary" plain @click="addSchool">添加菜品</el-button>
             </div>
             <el-table :data="tableData" border style="width: 100%" ref="multipleTable">
-               <el-table-column prop="created_at" label="创建日期" sortable></el-table-column>
-                <el-table-column prop="created_ata" label="菜品名称"></el-table-column>
-                <el-table-column prop="created_ata" label="菜品价格"></el-table-column>
-                <el-table-column prop="created_ata" label="使用时间"></el-table-column>
+                <el-table-column prop="name" label="菜品名称"></el-table-column>
+                <el-table-column prop="price" label="菜品价格"></el-table-column>
+                <!-- <el-table-column prop="created_ata" label="使用时间"></el-table-column>
                 <el-table-column prop="created_ata" label="有效期"></el-table-column>
-                <el-table-column prop="created_ata" label="菜品简介"></el-table-column>
-                <el-table-column prop="created_ataa" label="菜品图片"></el-table-column>
+                <el-table-column prop="created_ata" label="菜品简介"></el-table-column> -->
+                <el-table-column label="封面图">
+                  <template slot-scope="props">
+                    <img :src="props.row.img" alt="" style="width:100px;height:auto;cursor:pointer;" @click="checkImage(props.row.img)">
+                  </template>
+                </el-table-column>
                 <el-table-column label="操作">
                    <template slot-scope="scope">
                       <el-button
@@ -45,28 +48,29 @@
             </div>
         </div>
 
-        <!-- 编辑弹出框 -->
+        <!-- 添加菜品 -->
         <el-dialog title="添加菜品" :visible.sync="editVisible" width="500px">
             <el-form ref="form" :model="form" label-width="80px">
                 <el-form-item label="菜品名称">
                     <el-input v-model="form.name"></el-input>
                 </el-form-item>
                 <el-form-item label="菜品价格">
-                    <el-input v-model="form.name"></el-input>
+                    <el-input v-model="form.price"></el-input>
                 </el-form-item>
                 <el-form-item label="使用时间">
                     <el-time-picker
                         v-model="form.time1"
+                        value-format="HH:mm:ss"
                         placeholder="选择开始时间">
                     </el-time-picker>
                     <el-time-picker
                         style="margin-top:20px;"
-                        arrow-control
                         v-model="form.time2"
+                        value-format="HH:mm:ss"
                         placeholder="选择结束时间">
                     </el-time-picker>
                 </el-form-item>
-                <el-form-item label="有效期">
+                <el-form-item label="结束日期">
                     <el-date-picker
                           v-model="form.date"
                           type="date"
@@ -75,23 +79,26 @@
                     </el-date-picker>
                 </el-form-item>
                 <el-form-item label="菜品简介">
-                    <el-input type="textarea" v-model="form.desc"></el-input>
+                    <el-input type="textarea" autosize v-model="form.desc"></el-input>
                 </el-form-item>
             </el-form>
             <el-upload
-              action="https://jsonplaceholder.typicode.com/posts/"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
-              :before-remove="beforeRemove"
+              class="upload-demo"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
               :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="fileList">
-              <el-button size="small" type="primary">上传图片</el-button>
+              :headers="token"
+              :file-list="fileList"
+              list-type="picture">
+              <el-button size="small" type="primary">上传菜品图片</el-button>
               <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
             </el-upload>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
+                <el-button type="primary" @click="saveEdit">添加</el-button>
             </span>
         </el-dialog>
 
@@ -99,12 +106,11 @@
 </template>
 
 <script>
+    import { apiCookbookList,apiMenuListAdd,apiMenuList,apiMenuListDelete} from '@/service/index'
     export default {
         data() {
             return {
-                cateList: [{
-                  label: '中餐'
-                }],
+                cateList: [],
                 cateId: '',
                 fileList: [],
                 tableData: [],
@@ -117,18 +123,24 @@
                 editVisible: false,
                 form: {
                     name: '',
+                    price: '',
                     date: '',
                     time1: '',
                     time2:'',
                     desc: ''
-                }
+                },
+                deleteId: ''
             }
         },
         created() {
-            this.getData();
+            this.getCookList()
         },
         computed: {
-
+          token(){
+             return {
+               Authorization: `bearer ${localStorage.getItem('admin-token')}`
+             }
+           }
         },
         methods: {
             // 分页导航
@@ -136,56 +148,92 @@
                 this.cur_page = val;
                 this.getData();
             },
-            handleRemove(file, fileList) {
-                console.log(file, fileList);
+            handleRemoveMain(file, fileList) {
+                this.fileList = fileList
             },
-            handlePreview(file) {
-                console.log(file);
+            handleChangeMain(file, fileList){
+              this.fileList = fileList
             },
-            handleExceed(files, fileList) {
-              this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+            checkImage(url){
+              window.open(url)
             },
-            beforeRemove(file, fileList) {
-              return this.$confirm(`确定移除 ${ file.name }？`);
+            getCookList(){
+              apiCookbookList()
+              .then((res) => {
+                  this.cateList = res.data.list
+                  if(this.cateList.length>0){
+                    this.cateId = this.cateList[0].id
+                    this.getData()
+                  }
+              })
+            },
+            selectCook(){
+              this.getData()
             },
             getData() {
-                const self = this
-                this.$axios({
-                  method: 'get',
-                  url: `/api/admin/order/apm/${self.pageSize}?page=${self.cur_page}`,
-                  headers: {
-                    Authorization: `bearer ${localStorage.getItem('admin-token')}`
-                  }
+                apiMenuList({
+                  id: this.cateId,
+                  page: 1
                 })
                 .then((res) => {
                     console.log('res',res.data)
-                    self.tableData = res.data.data.list
-                    self.total = res.data.data.total
+                    this.tableData = res.data.list
+                    this.total = res.data.total
                 })
             },
-            search() {
-                this.is_search = true;
-            },
             addSchool(){
+              if(this.cateId == ''){
+                this.$message('请先选择菜谱再添加菜品')
+                return
+              }
               this.editVisible = true
             },
             // 保存编辑
             saveEdit() {
-
+              if(this.form.name == '' || this.form.time1 == '' || this.form.time2 == '' || this.form.date == ''){
+                this.$message.error('信息填写完整再提交')
+                return
+              }
+              if(this.fileList.price == '' || this.form.desc == ''){
+                this.$message.error('信息填写完整再提交')
+                return
+              }
+              if(this.fileList.length == 0){
+                this.$message.error('菜品图片未上传')
+                return
+              }
+              apiMenuListAdd({
+                name: this.form.name,
+                img: this.fileList[0].response.data.url,
+                sort: 1,
+                begin: this.form.time1,
+                end: this.form.time2,
+                before: this.form.date,
+                price: this.form.price,
+                cookbook_id: this.cateId,
+                content: this.form.desc
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.editVisible = false
+                  this.$message.success('添加成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             },
             handleEdit(){
 
             },
-            handleDelete(){
-              this.$confirm('确定删除当前菜谱?', '提示', {
+            handleDelete(row){
+              this.deleteId = row.id
+              this.$confirm('确定删除当前菜品?', '提示', {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
                         type: 'warning'
                       }).then(() => {
-                        this.$message({
-                          type: 'success',
-                          message: '删除成功!'
-                        });
+                        this.deleteRow()
                       }).catch(() => {
                         this.$message({
                           type: 'info',
@@ -195,7 +243,17 @@
             },
             // 确定删除
             deleteRow(){
-
+              apiMenuListDelete({
+                id: this.deleteId
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.$message.success('删除成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             }
         }
     }
