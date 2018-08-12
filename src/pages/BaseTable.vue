@@ -25,7 +25,9 @@
                 <el-table-column prop="room_no" label="房间号" width="120"></el-table-column>
                 <el-table-column prop="order_no" label="身份证号码" width="200"></el-table-column>
                 <el-table-column prop="total" label="订单金额" width="120"></el-table-column>
-                <el-table-column prop="apm_pre_addressa" label="菜品详情" width="200"></el-table-column>
+                <el-table-column prop="productName" label="商品名称" width="200"></el-table-column>
+                <el-table-column prop="productPrice" label="商品价格" width="200"></el-table-column>
+                <el-table-column prop="productAmount" label="购买数量" width="200"></el-table-column>
                 <el-table-column prop="remark" label="备注信息" width="200"></el-table-column>
             </el-table>
             <div class="pagination">
@@ -80,6 +82,9 @@
                     this.tableData = res.data.list
                     this.tableData.forEach(function(item){
                         item.type = item.type == 1?'美食订单':'服务订单'
+                        item.productName = item.detail[0].name
+                        item.productPrice = item.detail[0].price
+                        item.productAmount = item.detail[0].amount
                     })
                     this.total = res.data.total
                 })
