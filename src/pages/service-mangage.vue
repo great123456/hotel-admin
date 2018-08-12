@@ -8,7 +8,7 @@
         </div>
         <div class="container">
             <div class="handle-box">
-              <el-select v-model="cateId" placeholder="请选择客房服务">
+              <el-select v-model="cateId" placeholder="请选择客房服务" @change="selectService">
                   <el-option
                     v-for="item in cateList"
                     :key="item.id"
@@ -170,6 +170,9 @@
                       this.getData()
                     }
                 })
+            },
+            selectService(){
+               this.getData()
             },
             getData() {
                 const self = this

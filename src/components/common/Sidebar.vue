@@ -74,6 +74,11 @@
                         icon: 'el-icon-menu',
                         index: 'coupon',
                         title: '优惠券管理'
+                    },
+                    {
+                        icon: 'el-icon-menu',
+                        index: 'topic',
+                        title: '话题列表'
                     }
                 ]
             }

@@ -100,3 +100,15 @@ export const apiTravelListAdd = (obj) => fetch(API_PATH + '/travel/store', obj, 
 
 //删除游记
 export const apiTravelListDelete = (obj) => fetch(API_PATH + `/travel/delete/${obj.id}`, obj, 'DELETE')
+
+//话题列表
+export const apiTopicList = (obj) => fetch(API_PATH + '/share/list/size/10', obj, 'GET')
+
+//评论（字段参考小程序）
+export const apiTopicListComment = (obj) => fetch(API_PATH + `/share/share-comment/{obj.id}`, obj, 'GET')
+
+//删除话题
+export const apiTopicListDelete = (obj) => fetch(API_PATH + `/share/delete/{obj.id}`, obj, 'DELETE')
+
+//删除评论以及子评论
+export const apiCommentDelete = (obj) => fetch(API_PATH + `/share/delete-comment/{obj.id}`, obj, 'DELETE')

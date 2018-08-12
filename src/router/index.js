@@ -76,6 +76,12 @@ export default new Router({
                     path: '/travel',
                     component: resolve => require(['../pages/travel.vue'], resolve),
                     meta: { title: '游记管理' }
+                },
+                {
+                    //话题列表
+                    path: '/topic',
+                    component: resolve => require(['../pages/topic.vue'], resolve),
+                    meta: { title: '话题列表' }
                 }
             ]
         },

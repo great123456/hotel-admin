@@ -208,7 +208,7 @@
                 discount: this.form.discount,
                 limit: this.form.limit,
                 id: this.updateId,
-                status: this.form.status?1:0
+                status: this.form.status?1:2
               })
               .then((res) => {
                 if(res.code == 200){
