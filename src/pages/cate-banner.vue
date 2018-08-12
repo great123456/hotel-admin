@@ -74,16 +74,16 @@
         data() {
             return {
                 bannerList: [{
+                  label: '首页banner',
+                  id:3
+                },{
                   label: '美食banner',
                   id: 1
                 },{
                   label: '服务banner',
                   id:2
-                },{
-                  label: '首页banner',
-                  id:3
                 }],
-                bannerType:1,
+                bannerType:3,
                 tableData: [],
                 fileList: [],
                 cur_page: 1,

@@ -19,13 +19,14 @@
             </div>
             <el-table :data="tableData" border style="width: 100%" ref="multipleTable">
                 <el-table-column prop="created_at" label="订单日期" sortable width="200"></el-table-column>
-                <el-table-column prop="created_ata" label="订单类型" sortable width="200"></el-table-column>
-                <el-table-column prop="apm_name" label="姓名" width="120"></el-table-column>
-                <el-table-column prop="apm_phone" label="手机号" width="200"></el-table-column>
-                <el-table-column prop="apm_det_address" label="房间号" width="120"></el-table-column>
-                <el-table-column prop="apm_id_card_no" label="身份证号码" width="200"></el-table-column>
+                <el-table-column prop="type" label="订单类型" width="200"></el-table-column>
+                <el-table-column prop="name" label="姓名" width="120"></el-table-column>
+                <el-table-column prop="phone" label="手机号" width="200"></el-table-column>
+                <el-table-column prop="room_no" label="房间号" width="120"></el-table-column>
+                <el-table-column prop="order_no" label="身份证号码" width="200"></el-table-column>
+                <el-table-column prop="total" label="订单金额" width="120"></el-table-column>
                 <el-table-column prop="apm_pre_addressa" label="菜品详情" width="200"></el-table-column>
-                <el-table-column prop="apm_pre_addressa" label="备注信息" width="200"></el-table-column>
+                <el-table-column prop="remark" label="备注信息" width="200"></el-table-column>
             </el-table>
             <div class="pagination">
                 <el-pagination background @current-change="handleCurrentChange" :page-size="pageSize" layout="prev, pager, next" :total="total">
@@ -77,11 +78,14 @@
                 .then((res) => {
                     console.log('res',res.data)
                     this.tableData = res.data.list
+                    this.tableData.forEach(function(item){
+                        item.type = item.type == 1?'美食订单':'服务订单'
+                    })
                     this.total = res.data.total
                 })
             },
             selectType(){
-              this.getData();
+              this.getData()
             },
             search() {
                 this.is_search = true;

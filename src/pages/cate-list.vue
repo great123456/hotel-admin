@@ -200,7 +200,13 @@
                  sort: 1
                })
                .then((res)=>{
-                 console.log(res)
+                  if(res.code == 200){
+                    this.dialogUpdate = false
+                    this.$message.success('修改成功')
+                    this.getData()
+                  }else{
+                    this.$message.error(res.message)
+                  }
                })
             },
             handleDelete(row){

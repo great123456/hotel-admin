@@ -101,12 +101,68 @@
                 <el-button type="primary" @click="saveEdit">添加</el-button>
             </span>
         </el-dialog>
+        
+
+        <!-- 修改菜品 -->
+        <el-dialog title="编辑菜品" :visible.sync="updateDialog" width="500px">
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="菜品名称">
+                    <el-input v-model="form.name"></el-input>
+                </el-form-item>
+                <el-form-item label="菜品价格">
+                    <el-input v-model="form.price"></el-input>
+                </el-form-item>
+                <el-form-item label="使用时间">
+                    <el-time-picker
+                        v-model="form.time1"
+                        value-format="HH:mm:ss"
+                        placeholder="选择开始时间">
+                    </el-time-picker>
+                    <el-time-picker
+                        style="margin-top:20px;"
+                        v-model="form.time2"
+                        value-format="HH:mm:ss"
+                        placeholder="选择结束时间">
+                    </el-time-picker>
+                </el-form-item>
+                <el-form-item label="结束日期">
+                    <el-date-picker
+                          v-model="form.date"
+                          type="date"
+                          value-format="yyyy-MM-dd"
+                          placeholder="选择日期">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="菜品简介">
+                    <el-input type="textarea" autosize v-model="form.desc"></el-input>
+                </el-form-item>
+            </el-form>
+            <el-upload
+              class="upload-demo"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
+              :limit="1"
+              :headers="token"
+              :file-list="fileList"
+              list-type="picture">
+              <el-button size="small" type="primary">上传菜品图片</el-button>
+              <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
+            </el-upload>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="updateDialog = false">取 消</el-button>
+                <el-button type="primary" @click="updateMenu">修改</el-button>
+            </span>
+        </el-dialog>
+
 
     </div>
 </template>
 
 <script>
-    import { apiCookbookList,apiMenuListAdd,apiMenuList,apiMenuListDelete} from '@/service/index'
+    import { apiCookbookList,apiMenuListAdd,apiMenuList,apiMenuListDelete,apiMenuListSave,apiMenuListDetail} from '@/service/index'
     export default {
         data() {
             return {
@@ -121,6 +177,7 @@
                 select_word: '',
                 is_search: false,
                 editVisible: false,
+                updateDialog: false,
                 form: {
                     name: '',
                     price: '',
@@ -129,7 +186,8 @@
                     time2:'',
                     desc: ''
                 },
-                deleteId: ''
+                deleteId: '',
+                updateId: ''
             }
         },
         created() {
@@ -223,8 +281,60 @@
                 }
               })
             },
-            handleEdit(){
-
+            handleEdit(index,row){
+              this.updateDialog = true
+              this.updateId = row.id
+              this.getMenuDetail(this.updateId)
+            },
+            getMenuDetail(id){
+              apiMenuListDetail({
+                id: id
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.form.name = res.data.name
+                  this.form.price = res.data.price
+                  this.form.desc = res.data.content
+                  this.form.date = res.data.before
+                  this.form.time1 = res.data.begin
+                  this.form.time2 = res.data.end
+                }
+              })
+            },
+            updateMenu(){
+              if(this.form.name == '' || this.form.time1 == '' || this.form.time2 == '' || this.form.date == ''){
+                this.$message.error('信息填写完整再提交')
+                return
+              }
+              if(this.fileList.price == '' || this.form.desc == ''){
+                this.$message.error('信息填写完整再提交')
+                return
+              }
+              if(this.fileList.length == 0){
+                this.$message.error('菜品图片未上传')
+                return
+              }
+              apiMenuListSave({
+                id: this.updateId,
+                name: this.form.name,
+                img: this.fileList[0].response.data.url,
+                sort: 1,
+                begin: this.form.time1,
+                end: this.form.time2,
+                before: this.form.date,
+                price: this.form.price,
+                cookbook_id: this.cateId,
+                conten: this.form.desc
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.updateDialog = false
+                  this.$message.success('修改成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             },
             handleDelete(row){
               this.deleteId = row.id

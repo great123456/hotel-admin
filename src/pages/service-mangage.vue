@@ -46,7 +46,7 @@
             </div>
         </div>
 
-        <!-- 编辑弹出框 -->
+        <!-- 添加服务产品 -->
         <el-dialog title="添加服务产品" :visible.sync="editVisible" width="500px">
             <el-form ref="form" :model="form" label-width="80px">
                 <el-form-item label="名称">
@@ -76,11 +76,43 @@
             </span>
         </el-dialog>
 
+
+        <!-- 修改服务产品 -->
+        <el-dialog title="编辑服务产品" :visible.sync="updateDialog" width="500px">
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="名称">
+                    <el-input v-model="form.name"></el-input>
+                </el-form-item>
+                <el-form-item label="价格">
+                    <el-input v-model="form.price"></el-input>
+                </el-form-item>
+            </el-form>
+            <el-upload
+              class="upload-demo"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
+              :limit="1"
+              :headers="token"
+              :file-list="fileList"
+              list-type="picture">
+              <el-button size="small" type="primary">上传服务产品图片</el-button>
+              <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
+            </el-upload>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="updateDialog = false">取 消</el-button>
+                <el-button type="primary" @click="saveEdit">修改</el-button>
+            </span>
+        </el-dialog>
+
+
     </div>
 </template>
 
 <script>
-  import { apiServiceList,apiServiceProList,apiServiceProListAdd,apiServiceProListDelete } from '@/service/index'
+  import { apiServiceList,apiServiceProList,apiServiceProListAdd,apiServiceProListDelete,apiServiceProListSave } from '@/service/index'
     export default {
         data() {
             return {
@@ -95,11 +127,13 @@
                 select_word: '',
                 is_search: false,
                 editVisible: false,
+                updateDialog: false,
                 form: {
                     name: '',
                     price: ''
                 },
-                deleteId: ''
+                deleteId: '',
+                updateId: ''
             }
         },
         created() {
@@ -162,6 +196,18 @@
             },
             // 添加服务产品
             saveEdit() {
+              if(this.form.name == ''){
+                this.$message.error('产品名称不能为空')
+                return
+              }
+              if(this.form.price == ''){
+                this.$message.error('产品价格不能为空')
+                return
+              }
+              if(this.fileList.length == 0){
+                this.$message.error('产品图片未上传')
+                return
+              }
               apiServiceProListAdd({
                 name: this.form.name,
                 img: this.fileList[0].response.data.url,
@@ -179,8 +225,42 @@
                 }
               })
             },
-            handleEdit(){
-
+            handleEdit(index,row){
+              this.updateDialog = true
+              this.updateId = row.id
+              this.form.name = row.name
+              this.form.price = row.price
+            },
+            updateServiceManage(){
+              if(this.form.name == ''){
+                this.$message.error('产品名称不能为空')
+                return
+              }
+              if(this.form.price == ''){
+                this.$message.error('产品价格不能为空')
+                return
+              }
+              if(this.fileList.length == 0){
+                this.$message.error('产品图片未上传')
+                return
+              }
+              apiServiceProListSave({
+                id: this.updateId,
+                name: this.form.name,
+                img: this.fileList[0].response.data.url,
+                price: this.form.price,
+                sort: 1,
+                service_id: this.cateId
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.updateDialog = false
+                  this.$message.success('修改成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             },
             handleDelete(row){
               this.deleteId = row.id

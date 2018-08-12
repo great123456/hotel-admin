@@ -53,6 +53,12 @@ export const apiMenuList = (obj) => fetch(API_PATH + `/menu/list/pid/${obj.id}/s
 //删除菜品
 export const apiMenuListDelete = (obj) => fetch(API_PATH + `/menu/delete/${obj.id}`, obj, 'DELETE')
 
+//修改菜品
+export const apiMenuListSave = (obj) => fetch(API_PATH + '/menu/save', obj, 'POST')
+
+//菜品明细
+export const apiMenuListDetail = (obj) => fetch(API_PATH + `/menu/edit/${obj.id}`, obj, 'GET')
+
 //优惠卷列表
 export const apiCouponList = (obj) => fetch(API_PATH + '/coupon/list/size/30', obj, 'GET')
 
@@ -71,6 +77,9 @@ export const apiServiceListAdd = (obj) => fetch(API_PATH + '/service/store', obj
 //服务大类-删除
 export const apiServiceListDelete = (obj) => fetch(API_PATH + `/service/delete/${obj.id}`, obj, 'DELETE')
 
+//服务大类-修改
+export const apiServiceListSave = (obj) => fetch(API_PATH + '/service/save', obj, 'POST')
+
 //客房服务-列表
 export const apiServiceProList = (obj) => fetch(API_PATH + `/servicedetail/list/pid/${obj.id}/size/20`, obj, 'GET')
 
@@ -79,6 +88,9 @@ export const apiServiceProListAdd = (obj) => fetch(API_PATH + '/servicedetail/st
 
 //客房服务-删除
 export const apiServiceProListDelete = (obj) => fetch(API_PATH + `/servicedetail/delete/${obj.id}`, obj, 'DELETE')
+
+//客房服务-修改
+export const apiServiceProListSave = (obj) => fetch(API_PATH + '/servicedetail/save', obj, 'POST')
 
 //游记列表
 export const apiTravelList = (obj) => fetch(API_PATH + '/travel/list/size/100', obj, 'GET')

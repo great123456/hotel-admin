@@ -36,7 +36,7 @@
             </div>
         </div>
 
-        <!-- 编辑弹出框 -->
+        <!-- 添加服务 -->
         <el-dialog title="添加服务" :visible.sync="editVisible" width="500px">
             <el-form ref="form" :model="form" label-width="80px">
                 <el-form-item label="服务名称">
@@ -63,11 +63,38 @@
             </span>
         </el-dialog>
 
+        <!-- 修改服务 -->
+        <el-dialog title="修改服务" :visible.sync="updateDialog" width="500px">
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item label="服务名称">
+                    <el-input v-model="form.name"></el-input>
+                </el-form-item>
+            </el-form>
+            <el-upload
+              class="upload-demo"
+              action="/api/admin/upload/img"
+              :on-change="handleChangeMain"
+              :on-remove="handleRemoveMain"
+              name="img"
+              multiple
+              :limit="1"
+              :headers="token"
+              :file-list="fileList"
+              list-type="picture">
+              <el-button size="small" type="primary">上传服务图标</el-button>
+              <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
+            </el-upload>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="updateDialog = false">取 消</el-button>
+                <el-button type="primary" @click="updateService">修改</el-button>
+            </span>
+        </el-dialog>
+
     </div>
 </template>
 
 <script>
-    import { apiServiceList,apiServiceListAdd,apiServiceListDelete } from '@/service/index'
+    import { apiServiceList,apiServiceListAdd,apiServiceListDelete,apiServiceListSave } from '@/service/index'
     export default {
         data() {
             return {
@@ -80,10 +107,12 @@
                 select_word: '',
                 is_search: false,
                 editVisible: false,
+                updateDialog: false,
                 form: {
                     name: ''
                 },
-                deleteId: ''
+                deleteId: '',
+                updateId: ''
             }
         },
         created() {
@@ -128,6 +157,14 @@
             },
             // 添加服务
             saveEdit() {
+              if(this.form.name == ''){
+                this.$message.error('产品名称不能为空')
+                return
+              }
+              if(this.fileList.length == 0){
+                this.$message.error('服务图片未上传')
+                return
+              }
               apiServiceListAdd({
                 name: this.form.name,
                 img: this.fileList[0].response.data.url,
@@ -143,8 +180,35 @@
                 }
               })
             },
-            handleEdit(){
-
+            handleEdit(index,row){
+              this.updateDialog = true
+              this.updateId = row.id
+              this.form.name = row.name
+            },
+            updateService(){
+              if(this.form.name == ''){
+                this.$message.error('产品名称不能为空')
+                return
+              }
+              if(this.fileList.length == 0){
+                this.$message.error('服务图片未上传')
+                return
+              }
+              apiServiceListSave({
+                id: this.updateId,
+                name: this.form.name,
+                img: this.fileList[0].response.data.url,
+                sort: 1
+              })
+              .then((res)=>{
+                if(res.code == 200){
+                  this.updateDialog = false
+                  this.$message.success('修改成功')
+                  this.getData()
+                }else{
+                  this.$message.error(res.message)
+                }
+              })
             },
             handleDelete(row){
               this.deleteId = row.id

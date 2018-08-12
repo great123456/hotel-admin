@@ -229,7 +229,7 @@
               this.form.count = row.count
               this.form.discount = row.discount
               this.form.limit = row.limit
-              this.form.status = row.status == 1?true:false
+              this.form.status = row.status == '正常'?true:false
             },
             handleDelete(row){
                this.deleteId = row.id
