@@ -54,7 +54,7 @@
                 typeId: 1,
                 tableData: [],
                 cur_page: 1,
-                pageSize: 5,
+                pageSize: 10,
                 total: 0,
                 select_cate: '',
                 select_word: '',
@@ -75,10 +75,11 @@
             },
             getData() {
                 apiOrderList({
-                    type: this.typeId
+                    type: this.typeId,
+                    page: this.cur_page
                 })
                 .then((res) => {
-                    console.log('res',res.data)
+                    console.log('res-order',res.data)
                     this.tableData = res.data.list
                     this.tableData.forEach(function(item){
                         item.type = item.type == 1?'美食订单':'服务订单'

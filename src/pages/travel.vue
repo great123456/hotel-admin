@@ -93,7 +93,7 @@
                 fileList: [],
                 tableData: [],
                 cur_page: 1,
-                pageSize: 5,
+                pageSize: 10,
                 total: 0,
                 select_cate: '',
                 select_word: '',
@@ -135,7 +135,9 @@
             },
             getData() {
                 const self = this
-                apiTravelList()
+                apiTravelList({
+                  page: this.cur_page
+                })
                 .then((res) => {
                   console.log('res',res)
                   self.tableData = res.data.list

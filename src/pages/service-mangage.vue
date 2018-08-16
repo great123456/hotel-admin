@@ -121,7 +121,7 @@
                 fileList: [],
                 tableData: [],
                 cur_page: 1,
-                pageSize: 5,
+                pageSize: 10,
                 total: 0,
                 select_cate: '',
                 select_word: '',
@@ -177,7 +177,8 @@
             getData() {
                 const self = this
                 apiServiceProList({
-                  id: this.cateId
+                  id: this.cateId,
+                  page: this.cur_page
                 })
                 .then((res) => {
                     self.tableData = res.data.list

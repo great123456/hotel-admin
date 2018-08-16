@@ -171,7 +171,7 @@
                 fileList: [],
                 tableData: [],
                 cur_page: 1,
-                pageSize: 5,
+                pageSize: 10,
                 total: 0,
                 select_cate: '',
                 select_word: '',
@@ -216,7 +216,9 @@
               window.open(url)
             },
             getCookList(){
-              apiCookbookList()
+              apiCookbookList({
+                page: this.cur_page
+              })
               .then((res) => {
                   this.cateList = res.data.list
                   if(this.cateList.length>0){
